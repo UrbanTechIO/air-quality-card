@@ -33,7 +33,13 @@ entities:
   rating: sensor.your_rating
 ```
 
-  OR you may use the UI for picking the entities
-  you may leave the Absolute MAX and MIN empty for predefined ranges or change them to what you like
+  - OR you may use the UI for picking the entities
+  - You may leave the Absolute MAX and MIN empty for predefined ranges or change them to what you like.
+  - Hoovering over the bars will reveal the name of the entity as well as the healthy range expected.
+
+  ![Air Quality Card](./img/base.png)
+  ![Air Quality Card](./img/hoover.png)
+
+
 
   
