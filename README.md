@@ -36,9 +36,12 @@ entities:
   - OR you may use the UI for picking the entities
   - You may leave the Absolute MAX and MIN empty for predefined ranges or change them to what you like.
   - Hoovering over the bars will reveal the name of the entity as well as the healthy range expected.
+  - copy the images inside img directory to the directory www/airquality/
+  - an entity that provide Air Quality Rating is a Must for the image to take effect with (unhealthy, poor, moderate, good, excellent) values.
 
   ![Air Quality Card](./img/base.png)
   ![Air Quality Card](./img/hoover.png)
+  ![Air Quality Card](./img/danger.png)
 
 
 
