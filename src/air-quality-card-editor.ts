@@ -3,7 +3,6 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { HomeAssistant, fireEvent } from 'custom-card-helpers';
 import { AirQualityCardConfig, SensorType } from './air-quality-card';
 
-
 @customElement('air-quality-card-editor')
 export class AirQualityCardEditor extends LitElement {
   @property({ attribute: false }) hass!: HomeAssistant;
@@ -25,26 +24,24 @@ export class AirQualityCardEditor extends LitElement {
       font-weight: bold;
       margin-bottom: 4px;
     }
-    input[type="number"] {
-        background-color:rgb(168, 168, 168); /* light grey */
-        color: #000;              /* black text */
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        padding: 4px;
-        width: 100%;
-        box-sizing: border-box;
+    input[type="number"], input[type="text"] {
+      background-color: rgb(110, 110, 110);
+      color: #000;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 4px;
+      width: 100%;
+      box-sizing: border-box;
     }
   `;
 
   private _valueChanged(ev: Event, key: SensorType, field: string) {
-
     if (!this._config.entities) return;
     const target = ev.target as HTMLInputElement;
     const newVal = field === 'min' || field === 'max' ? parseFloat(target.value) : target.value;
 
     if (!this._config.entities[key]) this._config.entities[key] = '';
 
-    // Store custom limits in config directly (you can nest this in a better schema)
     if (!('_customThresholds' in this._config)) {
       (this._config as any)._customThresholds = {};
     }
@@ -60,7 +57,7 @@ export class AirQualityCardEditor extends LitElement {
   render() {
     if (!this.hass || !this._config) return html``;
 
-    const sensors: SensorType[] = ['co2', 'voc', 'pm25', 'temperature', 'humidity'];
+    const sensors: SensorType[] = ['co2', 'voc', 'pm25', 'temperature', 'humidity', 'rating'];
     const customThresholds = (this._config as any)._customThresholds || {};
 
     return html`
@@ -85,27 +82,30 @@ export class AirQualityCardEditor extends LitElement {
               <ha-entity-picker
                 .hass=${this.hass}
                 .value=${this._config.entities?.[sensorKey] || ''}
+                .configValue=${sensorKey}
                 @value-changed=${(e: any) => {
-                    this._config.entities = {
+                  this._config.entities = {
                     ...this._config.entities,
                     [sensorKey]: e.detail.value
-                    };
-                    fireEvent(this, 'config-changed', { config: this._config });
+                  };
+                  fireEvent(this, 'config-changed', { config: this._config });
                 }}
                 allow-custom-entity
               ></ha-entity-picker>
-              <label>Absolute Min</label>
-              <input
-                type="number"
-                .value=${threshold.min ?? ''}
-                @input=${(e: Event) => this._valueChanged(e, sensorKey, 'min')}
-              />
-              <label>Absolute Max</label>
-              <input
-                type="number"
-                .value=${threshold.max ?? ''}
-                @input=${(e: Event) => this._valueChanged(e, sensorKey, 'max')}
-              />
+              ${sensorKey !== 'rating' ? html`
+                <label>Absolute Min</label>
+                <input
+                  type="number"
+                  .value=${threshold.min ?? ''}
+                  @input=${(e: Event) => this._valueChanged(e, sensorKey, 'min')}
+                />
+                <label>Absolute Max</label>
+                <input
+                  type="number"
+                  .value=${threshold.max ?? ''}
+                  @input=${(e: Event) => this._valueChanged(e, sensorKey, 'max')}
+                />
+              ` : ''}
             </div>
           `;
         })}

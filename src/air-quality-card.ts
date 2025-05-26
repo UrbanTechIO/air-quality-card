@@ -45,7 +45,7 @@ const RATING_IMAGES: Record<string, string> = {
 };
 
 export class AirQualityCard extends LitElement {
-  @property() hass!: HomeAssistant;
+  @property({ attribute: false }) hass!: HomeAssistant;
   @property() private config!: AirQualityCardConfig;
 
   public setConfig(config: AirQualityCardConfig) {
@@ -227,21 +227,32 @@ export class AirQualityCard extends LitElement {
       .filter((key: SensorType) => SENSOR_THRESHOLDS[key])
       .map((key: SensorType) => this.renderBar(key, entities[key]));
 
-    const allHealthy = show_bars.every((key: SensorType) => {
-      const entityId = entities[key];
-      const state = entityId ? this.hass.states[entityId] : undefined;
-      if (!state || state.state === 'unavailable') return false;
-      const value = parseFloat(state.state);
-      const { min, max } = SENSOR_THRESHOLDS[key];
-      return this.isValueHealthy(value, min, max);
-    });
+    const allHealthy = show_bars
+      .filter(key => SENSOR_THRESHOLDS[key]) // skip "rating"
+      .every((key: SensorType) => {
+        const entityId = entities[key];
+        const state = entityId ? this.hass.states[entityId] : undefined;
+        if (!state || state.state === 'unavailable') return false;
+        const value = parseFloat(state.state);
+        const { min, max } = SENSOR_THRESHOLDS[key];
+        return this.isValueHealthy(value, min, max);
+      });
 
-    const rawState = entities.rating ? this.hass.states[entities.rating]?.state : '';
+
+    const ratingEntityId = entities.rating;
+    let rawState = '';
     let ratingKey = 'moderate';
+    // console.log('[AirQualityCard] ratingEntityId:', ratingEntityId);
+    // console.log('[AirQualityCard] rawState:', rawState);
 
-    if (typeof rawState === 'string') {
+
+    if (ratingEntityId && this.hass.states[ratingEntityId]) {
+      const state = this.hass.states[ratingEntityId].state;
+      rawState = state ?? ''; // ensure it's at least an empty string
+      // console.log('[AirQualityCard] NewrawState:', rawState);
+
       const candidate = rawState.toLowerCase().trim();
-      if (RATING_IMAGES.hasOwnProperty(candidate)) {
+      if (candidate && RATING_IMAGES.hasOwnProperty(candidate)) {
         ratingKey = candidate;
       } else {
         console.warn(`[AirQualityCard] Unknown air quality rating: "${rawState}" — defaulting to "moderate"`);
@@ -249,6 +260,10 @@ export class AirQualityCard extends LitElement {
     }
 
     const badgeImage = RATING_IMAGES[ratingKey];
+    // console.log('[AirQualityCard] Available rating images:', Object.keys(RATING_IMAGES));
+
+
+
 
     return html`
       <ha-card>

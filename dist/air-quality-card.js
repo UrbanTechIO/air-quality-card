@@ -10,27 +10,30 @@
           />
         </label>
 
-        ${["co2","voc","pm25","temperature","humidity"].map((e=>{const i=t[e]||{};return I`
+        ${["co2","voc","pm25","temperature","humidity","rating"].map((e=>{const i=t[e]||{};return I`
             <div class="sensor-entry">
               <label>${e.toUpperCase()}</label>
               <ha-entity-picker
                 .hass=${this.hass}
                 .value=${this._config.entities?.[e]||""}
+                .configValue=${e}
                 @value-changed=${t=>{this._config.entities={...this._config.entities,[e]:t.detail.value},gt(this,"config-changed",{config:this._config})}}
                 allow-custom-entity
               ></ha-entity-picker>
-              <label>Absolute Min</label>
-              <input
-                type="number"
-                .value=${i.min??""}
-                @input=${t=>this._valueChanged(t,e,"min")}
-              />
-              <label>Absolute Max</label>
-              <input
-                type="number"
-                .value=${i.max??""}
-                @input=${t=>this._valueChanged(t,e,"max")}
-              />
+              ${"rating"!==e?I`
+                <label>Absolute Min</label>
+                <input
+                  type="number"
+                  .value=${i.min??""}
+                  @input=${t=>this._valueChanged(t,e,"min")}
+                />
+                <label>Absolute Max</label>
+                <input
+                  type="number"
+                  .value=${i.max??""}
+                  @input=${t=>this._valueChanged(t,e,"max")}
+                />
+              `:""}
             </div>
           `}))}
       </div>
@@ -46,14 +49,14 @@
       font-weight: bold;
       margin-bottom: 4px;
     }
-    input[type="number"] {
-        background-color:rgb(168, 168, 168); /* light grey */
-        color: #000;              /* black text */
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        padding: 4px;
-        width: 100%;
-        box-sizing: border-box;
+    input[type="number"], input[type="text"] {
+      background-color: rgb(110, 110, 110);
+      color: #000;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 4px;
+      width: 100%;
+      box-sizing: border-box;
     }
   `,mt([dt({attribute:!1})],$t.prototype,"hass",void 0),mt([dt({state:!0,attribute:!1})],$t.prototype,"_config",void 0),$t=mt([(t=>(e,i)=>{void 0!==i?i.addInitializer((()=>{customElements.define(t,e)})):customElements.define(t,e)})("air-quality-card-editor")],$t);var _t=function(t,e,i,s){var o,n=arguments.length,r=n<3?e:null===s?s=Object.getOwnPropertyDescriptor(e,i):s;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)r=Reflect.decorate(t,e,i,s);else for(var a=t.length-1;a>=0;a--)(o=t[a])&&(r=(n<3?o(r):n>3?o(e,i,r):o(e,i))||r);return n>3&&r&&Object.defineProperty(e,i,r),r};console.info("%c AIR QUALITY CARD  v1.0 ","color: white; background: green; font-weight: bold;");const yt={co2:{min:400,max:1e3,unit:"ppm",icon:"mdi:molecule-co2",absoluteMin:400,absoluteMax:1300},voc:{min:0,max:500,unit:"ppb",icon:"mdi:chemical-weapon",absoluteMin:0,absoluteMax:1e3},pm25:{min:0,max:35,unit:"µg/m³",icon:"mdi:blur",absoluteMin:0,absoluteMax:50},temperature:{min:18,max:26,unit:"°C",icon:"mdi:thermometer",absoluteMin:-20,absoluteMax:60},humidity:{min:30,max:60,unit:"%",icon:"mdi:water-percent",absoluteMin:0,absoluteMax:100}},bt={excellent:"/local/airquality/excellent.png",good:"/local/airquality/good.png",moderate:"/local/airquality/moderate.png",poor:"/local/airquality/poor.png",unhealthy:"/local/airquality/unhealthy.png"};class vt extends at{setConfig(t){if(!t.entities)throw new Error("Entities required");this.config=t}static getConfigElement(){return Promise.resolve(document.createElement("air-quality-card-editor"))}static getStubConfig(){return{type:"custom:air-quality-card",title:"Air Quality",entities:{}}}renderBar(t,e){if(!e)return I``;const i=this.hass.states[e];if(!i||"unavailable"===i.state)return I``;const s=parseFloat(i.state),o=i.attributes.friendly_name||t.toUpperCase(),n=yt[t],r=this.config._customThresholds?.[t]||{},a=r.min??n.min,l=r.max??n.max,c=r.min??n.absoluteMin,h=r.max??n.absoluteMax,d=n.unit,p=n.icon,u=`${o} — healthy: ${a}–${l} ${d}`,f=Math.max(0,Math.min(100,(s-c)/(h-c)*100));return I`
       <div class="bar-container">
@@ -68,10 +71,10 @@
           <div class="tooltip">${u}</div>
         </div>
       </div>
-    `}isValueHealthy(t,e,i){return t>=e&&t<=i}render(){const{title:t,entities:e}=this.config,i=this.config.show_bars??Object.keys(e),s=i.filter((t=>yt[t])).map((t=>this.renderBar(t,e[t]))),o=(i.every((t=>{const i=e[t],s=i?this.hass.states[i]:void 0;if(!s||"unavailable"===s.state)return!1;const o=parseFloat(s.state),{min:n,max:r}=yt[t];return this.isValueHealthy(o,n,r)})),e.rating?this.hass.states[e.rating]?.state:"");let n="moderate";if("string"==typeof o){const t=o.toLowerCase().trim();bt.hasOwnProperty(t)?n=t:console.warn(`[AirQualityCard] Unknown air quality rating: "${o}" — defaulting to "moderate"`)}const r=bt[n];return I`
+    `}isValueHealthy(t,e,i){return t>=e&&t<=i}render(){const{title:t,entities:e}=this.config,i=this.config.show_bars??Object.keys(e),s=i.filter((t=>yt[t])).map((t=>this.renderBar(t,e[t]))),o=(i.filter((t=>yt[t])).every((t=>{const i=e[t],s=i?this.hass.states[i]:void 0;if(!s||"unavailable"===s.state)return!1;const o=parseFloat(s.state),{min:n,max:r}=yt[t];return this.isValueHealthy(o,n,r)})),e.rating);let n="",r="moderate";if(o&&this.hass.states[o]){n=this.hass.states[o].state??"";const t=n.toLowerCase().trim();t&&bt.hasOwnProperty(t)?r=t:console.warn(`[AirQualityCard] Unknown air quality rating: "${n}" — defaulting to "moderate"`)}const a=bt[r];return I`
       <ha-card>
         <div class="card-wrapper">
-          <img class="badge" src="${r}" alt="${o}" />
+          <img class="badge" src="${a}" alt="${n}" />
           <div class="header">
             <div class="title">${t||""}</div>
           </div>
@@ -189,4 +192,4 @@
       visibility: visible;
       opacity: 1;
     }
-  `,_t([dt()],vt.prototype,"hass",void 0),_t([dt()],vt.prototype,"config",void 0),customElements.get("air-quality-card")||customElements.define("air-quality-card",vt),window.customCards=window.customCards||[],window.customCards.push({type:"air-quality-card",name:"Air Quality Card",description:"Displays air quality sensors with healthy ranges and gradients.",preview:!0}),console.info("🧪 Registering card..."),customElements.whenDefined("air-quality-card").then((()=>{console.info("✅ air-quality-card is defined and ready.")})),customElements.get("air-quality-card")?console.info("✅ air-quality-card already defined"):(console.warn("🚨 air-quality-card not defined yet, defining now..."),customElements.define("air-quality-card",vt))})();
+  `,_t([dt({attribute:!1})],vt.prototype,"hass",void 0),_t([dt()],vt.prototype,"config",void 0),customElements.get("air-quality-card")||customElements.define("air-quality-card",vt),window.customCards=window.customCards||[],window.customCards.push({type:"air-quality-card",name:"Air Quality Card",description:"Displays air quality sensors with healthy ranges and gradients.",preview:!0}),console.info("🧪 Registering card..."),customElements.whenDefined("air-quality-card").then((()=>{console.info("✅ air-quality-card is defined and ready.")})),customElements.get("air-quality-card")?console.info("✅ air-quality-card already defined"):(console.warn("🚨 air-quality-card not defined yet, defining now..."),customElements.define("air-quality-card",vt))})();
