@@ -73,6 +73,42 @@ export class AirQualityCardEditor extends LitElement {
             }}
           />
         </label>
+        <label>
+          Card Width (e.g. 100%, 300px)
+          <input
+            type="text"
+            .value=${this._config.width || ''}
+            @input=${(e: any) => {
+              this._config.width = e.target.value;
+              fireEvent(this, 'config-changed', { config: this._config });
+            }}
+          />
+        </label>
+
+        <label>
+          Card Height (e.g. auto, 400px)
+          <input
+            type="text"
+            .value=${this._config.height || ''}
+            @input=${(e: any) => {
+              this._config.height = e.target.value;
+              fireEvent(this, 'config-changed', { config: this._config });
+            }}
+          />
+        </label>
+        <label>
+          Recommendation Sensor
+          <ha-entity-picker
+            .hass=${this.hass}
+            .value=${this._config.recommendation || ''}
+            .configValue=${'recommendation'}
+            @value-changed=${(e: any) => {
+              this._config.recommendation = e.detail.value;
+              fireEvent(this, 'config-changed', { config: this._config });
+            }}
+            allow-custom-entity
+          ></ha-entity-picker>
+        </label>
 
         ${sensors.map(sensorKey => {
           const threshold = customThresholds[sensorKey] || {};

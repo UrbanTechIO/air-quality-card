@@ -11,8 +11,11 @@ export type SensorType = 'co2' | 'voc' | 'pm25' | 'temperature' | 'humidity' | '
 export interface AirQualityCardConfig {
   type: string;
   title?: string;
+  width?: string;  // e.g., "100%", "400px"
+  height?: string;
   entities: Partial<Record<SensorType, string>>;  // co2, voc, etc.
   show_bars?: SensorType[];  // explicitly typed for clarity
+  recommendation?: string
   _customThresholds?: Record<SensorType, { min?: number; max?: number }>;
 }
 
@@ -63,14 +66,25 @@ export class AirQualityCard extends LitElement {
       border-radius: 50%;
       object-fit: cover;
       position: absolute;
-      top: -55px;
-      left: -20px;
+      top: -45px;
+      left: -15px;
       box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
       border: 3px solid var(--card-background-color);
     }
     ha-card {
-      padding: 16px;
+      padding: 15px;
       overflow: visible;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+    .recommendation-text {
+      margin-top: 16px;
+      font-size: 14px;
+      color: var(--primary-text-color);
+      background: var(--secondary-background-color);
+      padding: 10px;
+      border-radius: 8px;
+      line-height: 1.4;
     }
     .header {
       display: flex;
@@ -83,14 +97,15 @@ export class AirQualityCard extends LitElement {
       font-weight: bold;
     }
     .attributes {
-      display: flex;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
       gap: 12px;
+      width: 100%;
     }
     .bar-container {
       display: flex;
       align-items: center;
-      width: 48%;
+      width: 100%;
       position: relative;
     }
     .icon {
@@ -198,20 +213,23 @@ export class AirQualityCard extends LitElement {
     const fillPercent = Math.max(0, Math.min(100, ((value - absoluteMin) / (absoluteMax - absoluteMin)) * 100));
 
     return html`
-      <div class="bar-container">
+      <div
+        class="bar-container"
+        @click=${() => fireEvent(this, 'hass-more-info', { entityId })}
+        style="cursor: pointer;"
+        title="${tooltip}"
+      >
         <ha-icon class="icon" icon="${icon}"></ha-icon>
         <div class="bar-wrapper">
           <div class="value-above">${value} ${unit}</div>
           <div class="bar">
             <div class="gradient"></div>
             <div class="mask" style="left: ${fillPercent}%; right: 0;"></div>
-
           </div>
           <div class="tooltip">${tooltip}</div>
         </div>
       </div>
     `;
-
   }
 
 
@@ -266,16 +284,23 @@ export class AirQualityCard extends LitElement {
 
 
     return html`
-      <ha-card>
+      <ha-card style="width: ${this.config.width || '100%'}; height: ${this.config.height || 'auto'};">
         <div class="card-wrapper">
           <img class="badge" src="${badgeImage}" alt="${rawState}" />
           <div class="header">
-            <div class="title">${title || ''}</div>
+            <div class="title">${title ? `${title} - ${rawState}` : rawState}</div>
           </div>
           <div class="attributes">
             ${barElements}
           </div>
         </div>
+        ${this.config.recommendation && this.hass.states[this.config.recommendation]
+          ? html`
+              <div class="recommendation-text">
+                ${this.hass.states[this.config.recommendation].state}
+              </div>
+            `
+          : ''}
       </ha-card>
     `;
   }
