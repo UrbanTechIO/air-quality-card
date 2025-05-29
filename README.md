@@ -42,6 +42,8 @@ entities:
   ![Air Quality Card](./img/base.png)
   ![Air Quality Card](./img/hoover.png)
   ![Air Quality Card](./img/danger.png)
+  ![Air Quality Card](./img/recommend.png)
+  
 
 
 
