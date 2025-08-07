@@ -1,11 +1,10 @@
-console.info('%c AIR QUALITY CARD  v1.0 ', 'color: white; background: green; font-weight: bold;');
+console.info('%c AIR QUALITY CARD  v1.1 ', 'color: white; background: green; font-weight: bold;');
 
 import { LitElement, html, css } from 'lit';
 import { property } from 'lit/decorators.js';
 import { HomeAssistant } from 'custom-card-helpers';
 import { fireEvent } from 'custom-card-helpers';
 import './air-quality-card-editor';
-import { formatNumber } from 'custom-card-helpers';
 
 
 export type SensorType = 'co2' | 'voc' | 'pm25' | 'temperature' | 'humidity' | 'rating';
@@ -19,6 +18,17 @@ export interface AirQualityCardConfig {
   show_bars?: SensorType[];  // explicitly typed for clarity
   recommendation?: string
   _customThresholds?: Record<SensorType, { min?: number; max?: number }>;
+}
+
+
+interface hassWithFormat extends HomeAssistant {
+  formatNumber(
+    value: number,
+    options?: {
+      minimumFractionDigits?: number;
+      maximumFractionDigits?: number;
+    }
+  ): string;
 }
 
 
@@ -199,7 +209,19 @@ export class AirQualityCard extends LitElement {
     const state = this.hass.states[entityId];
     if (!state || state.state === 'unavailable') return html``;
 
-    const value = parseFloat(state.state);
+    // const value = parseFloat(state.state);
+    const raw = state.state;
+    const numeric = Number(raw);
+    // const rounded = Math.round(numeric * 100) / 100;
+
+    const hass = this.hass as hassWithFormat;
+
+    // Round value to 2 decimal places safely
+    const formatted = (Math.round((numeric + Number.EPSILON) * 100) / 100).toFixed(2);
+    console.log('Raw:', raw, 'Numeric:', numeric, 'Formatted:', formatted);
+
+
+
     const name = state.attributes.friendly_name || key.toUpperCase();
     const threshold = SENSOR_THRESHOLDS[key];
     const custom = (this.config as any)._customThresholds?.[key] || {};
@@ -212,7 +234,7 @@ export class AirQualityCard extends LitElement {
 
     const tooltip = `${name} — healthy: ${min}–${max} ${unit}`;
 
-    const fillPercent = Math.max(0, Math.min(100, ((value - absoluteMin) / (absoluteMax - absoluteMin)) * 100));
+    const fillPercent = Math.max(0, Math.min(100, ((numeric - absoluteMin) / (absoluteMax - absoluteMin)) * 100));
 
     return html`
       <div
@@ -223,7 +245,9 @@ export class AirQualityCard extends LitElement {
       >
         <ha-icon class="icon" icon="${icon}"></ha-icon>
         <div class="bar-wrapper">
-          <div class="value-above">${value} ${unit}</div>
+          <div class="value-above">${formatted} ${unit}</div>
+
+
           <div class="bar">
             <div class="gradient"></div>
             <div class="mask" style="left: ${fillPercent}%; right: 0;"></div>
@@ -334,4 +358,3 @@ if (!customElements.get('air-quality-card')) {
 } else {
   console.info('✅ air-quality-card already defined');
 }
-
