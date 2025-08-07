@@ -5,6 +5,8 @@ import { property } from 'lit/decorators.js';
 import { HomeAssistant } from 'custom-card-helpers';
 import { fireEvent } from 'custom-card-helpers';
 import './air-quality-card-editor';
+import { formatNumber } from 'custom-card-helpers';
+
 
 export type SensorType = 'co2' | 'voc' | 'pm25' | 'temperature' | 'humidity' | 'rating';
 
@@ -332,3 +334,4 @@ if (!customElements.get('air-quality-card')) {
 } else {
   console.info('✅ air-quality-card already defined');
 }
+
